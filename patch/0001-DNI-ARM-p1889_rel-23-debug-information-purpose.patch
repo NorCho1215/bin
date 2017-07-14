@@ -1,0 +1,59 @@
+diff --git a/arch/arm/mach-tegra/Makefile b/arch/arm/mach-tegra/Makefile
+index 12fe6b8..c50d5d6 100644
+--- a/arch/arm/mach-tegra/Makefile
++++ b/arch/arm/mach-tegra/Makefile
+@@ -138,5 +138,6 @@ obj-${CONFIG_TEGRA_BB_XMM_POWER2}       += baseband-xmm-power2.o
+ obj-${CONFIG_TEGRA_BASEBAND}            += tegra_bb.o
+ obj-$(CONFIG_TEGRA_BBC_PROXY)           += tegra_bbc_proxy.o
+ obj-$(CONFIG_TEGRA_BBC_THERMAL)         += tegra_bbc_thermal.o
++obj-y					+= tegra_micro_timer.o
+ 
+ 
+diff --git a/drivers/misc/tegra-fuse/tegra_fuse.c b/drivers/misc/tegra-fuse/tegra_fuse.c
+index 6a51653..35abeac 100644
+--- a/drivers/misc/tegra-fuse/tegra_fuse.c
++++ b/drivers/misc/tegra-fuse/tegra_fuse.c
+@@ -1429,11 +1429,15 @@ u32 tegra_get_bct_strapping(void)
+ 	return tegra_chip_bct_strapping;
+ }
+ 
++int tegra_fuse_init_done;
++u64 tegra_current_time(void);
+ void tegra_init_fuse(void)
+ {
+ 	u32 sku_id;
+ 
+ 	tegra_fuse_cfg_reg_visible();
++	tegra_fuse_init_done = 1;
++	printk("##@%s fuse done..c, (%lld)\n", __func__, tegra_current_time());
+ #ifdef CONFIG_ARCH_TEGRA_21x_SOC
+ 	tegra_fuse_override_chip_option_regs();
+ #endif
+diff --git a/kernel/printk.c b/kernel/printk.c
+index 67f72f5..a37f241 100644
+--- a/kernel/printk.c
++++ b/kernel/printk.c
+@@ -254,6 +254,12 @@ static u32 clear_idx;
+ #else
+ #define LOG_ALIGN __alignof__(struct log)
+ #endif
++
++#ifdef CONFIG_LOG_BUF_SHIFT
++#undef CONFIG_LOG_BUF_SHIFT
++#define CONFIG_LOG_BUF_SHIFT 19
++#endif
++
+ #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
+ static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
+ static char *log_buf = __log_buf;
+@@ -359,6 +365,10 @@ static void log_store(int facility, int level,
+ 		msg->ts_nsec = ts_nsec;
+ 	else
+ 		msg->ts_nsec = local_clock();
++
++	u64 tegra_current_time(void);
++	msg->ts_nsec = (u64)(tegra_current_time()*1000);
++
+ 	memset(log_dict(msg) + dict_len, 0, pad_len);
+ 	msg->len = sizeof(struct log) + text_len + dict_len + pad_len;
+ 

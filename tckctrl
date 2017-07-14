@@ -1,0 +1,107 @@
+#! /usr/bin/env python
+# Copyright (c) 2014, NVIDIA CORPORATION.  All Rights Reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+#
+# This script is to toggle the TCK signal of PM342 debug board.
+# There are 4 interface in FTDI chip and only interface B is used as JTAG
+# interface in PM342 board.
+#
+# Use command "sudo python tckctrl low" to set the TCK to low
+# Use command "sudo python tckctrl reset" to reset the mode to MPSSE (TCK high)
+#
+
+import os
+import sys
+import ftdi
+import time
+import struct
+from optparse import OptionParser
+
+
+if __name__=="__main__":
+
+    parser = OptionParser()
+    parser.set_defaults()
+    parser.add_option("--serial", "-s", action="store", type="string",
+                      dest="serial", help="Serial of debug board. Defaults to the value of PMXXX_SERIAL environment variable.")
+    (options, args) = parser.parse_args()
+
+    if options.serial is None and "PMXXX_SERIAL" in os.environ:
+        options.serial = os.environ["PMXXX_SERIAL"]
+        print "NOTE: Using --serial=%s from environment." % options.serial
+
+    if options.serial is None:
+        print "NOTE: Using first found PM342."
+
+
+    if len(args) != 1:
+        print >>sys.stderr, "Must give a TCK control command: low | reset"
+        sys.exit(1)
+
+    # initialize
+    ftdic = ftdi.ftdi_context()
+    ftdi.ftdi_init(ftdic)
+    if ftdic == 0:
+        print >>sys.stderr, 'new failed: %d',  ret
+        sys.exit( 1 )
+
+    # open usb
+    ftdi.ftdi_set_interface(ftdic, ftdi.INTERFACE_B)
+    if options.serial is not None:
+        print 'Use serial number %s' % options.serial
+
+    ret = ftdi.ftdi_usb_open_desc(ftdic, 0x0403, 0x6011, None, options.serial)
+    if ret < 0:
+        print >>sys.stderr, 'unable to open ftdi device: %d (%s)' % ( ret, ftdi.ftdi_get_error_string( ftdic ) )
+        sys.exit( 1 )
+
+    ftdi.ftdi_usb_reset(ftdic)
+    ftdi.ftdi_set_latency_timer(ftdic, 16)
+
+    # reset mode and set to MPSSE
+    print 'Reset bit mode'
+    ret = ftdi.ftdi_set_bitmode( ftdic, 0, ftdi.BITMODE_RESET )
+    if ret < 0:
+        print >>sys.stderr, 'Cannot reset MPSSE'
+        sys.exit( 1 )
+
+    time.sleep( 1 )
+    print 'Enter MPSSE mode'
+    ret = ftdi.ftdi_set_bitmode( ftdic, 0, ftdi.BITMODE_MPSSE )
+    if ret < 0:
+        print >>sys.stderr, 'Cannot enable MPSSE'
+        sys.exit( 1 )
+    time.sleep( 1 )
+
+    if args[0] == 'low':
+    # JTAG HEADER LOW BYTE FORMAT:
+    # 0 FT_B_JTAG_TCK
+    # 1 FT_B_JTAG_TD1
+    # 2 FT_B_JTAG_TD0
+    # 3 FT_B_JTAG_TMS
+    # 4 FT_B_JTAG_TRST_L
+    # 5 FT_B_JTAG_TRST_SW_EN
+    # 6 FT_B_JTAG_SRST_L
+    # 7 FT_B_JTAG_RCK
+
+        # Write data
+        # 0x80;  #This is the command code
+        # 0x50;  #clear bit 0
+        # 0xff;  #MASK: output all JTAG bits
+        cmd = struct.pack("<BBB", 0x80, 0x50, 0xff)
+        ftdi.ftdi_write_data(ftdic, cmd, len(cmd))
+        print 'Set TCK to low'
+
+    # close usb
+    ret = ftdi.ftdi_usb_close( ftdic )
+    if ret < 0:
+        print >>sys.stderr, 'unable to close ftdi device: %d (%s)' % ( ret, ftdi.ftdi_get_error_string( ftdic ) )
+        sys.exit( 1 )
+
+    print 'DONE.  (It may be useful to probe pin9 on PM342\'s connector J32 to make sure it is expected)'

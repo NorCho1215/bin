@@ -1,0 +1,166 @@
+#!/bin/bash
+
+declare -i p4swmirror_Id=100000 #now it is 3xxxx
+declare -i psac_Id=20000 #now it is 9xxx
+
+error() {
+    echo -e "\e[1;31mERROR: $*\e[0m"
+    exit 1
+}
+
+cherrypick() {
+  change_id=$1
+  hash=$(($change_id % 100))
+  if [ $hash -lt 10 ]; then
+    hash="0$hash"
+  fi
+  echo "change_id=$change_id"
+  SERVER_NAME=git-master.nvidia.com
+  PORT=12001
+  REMOTE=origin
+
+  if [ $change_id -lt $p4swmirror_Id ]; then
+    echo "debug !! p4swmirror "
+    SERVER_NAME=git-p4swmirror.nvidia.com
+    REMOTE=p4swmirror
+    PORT=14006
+  fi
+
+  if [ $change_id -lt $psac_Id ]; then
+    echo "debug !! psac"
+    SERVER_NAME=git-psac.nvidia.com
+    REMOTE=android
+    PORT=29418
+  fi
+
+  ssh -n -p $PORT $SERVER_NAME gerrit query --current-patch-set $change_id > ssh_query.tmp
+  parent_count=`cat ssh_query.tmp | grep '    parents:' | wc -l`
+  status=`cat ssh_query.tmp | grep "  status: MERGED"`
+  full_project=`cat ssh_query.tmp | grep "  project: " | cut -b 12-`
+  patchset_id=`cat ssh_query.tmp | grep "    number: " | tr -dc '[0-9]'`
+  ref=`cat ssh_query.tmp | grep "    ref: " | cut -b 10-`
+  rm ssh_query.tmp
+
+  # Strip off 'm/google/psac/' from head of PSAC entries
+  project_head=`echo $full_project | cut -b -14`
+  project=$full_project
+  if [ "$project_head" == "m/google/psac/" ]; then
+    project=`echo $full_project | cut -b 15-`
+  fi
+
+  # Ignore merged state for force merge (used for integrations)
+  if [ -z "$force_merge" ]; then
+    if [ ! -z "$status" ]; then
+      echo -e "$(tput setaf 2)\033[1mCherry-pick: $change_id/$patchset_id is merged\033[0m"
+      exit 0
+    fi
+  fi
+
+  FOLDER=$TOP/`grep "\"$project\"" $TOP/.repo/manifest.xml | head -n 1 | sed 's/^.*path="//' | cut -d\" -f1`
+
+  if [ "$FOLDER" == "$TOP/" ]; then
+    project=`echo $project | cut -d/ -f2-`
+    FOLDER=$TOP/`grep "\"$project\"" $TOP/.repo/manifest.xml | head -n 1 | sed 's/^.*path="//' | cut -d\" -f1`
+    if [ "$FOLDER" == "$TOP/" ]; then
+      error "Unable to locate proper folder for patch ($change_id)"
+    fi
+  fi
+
+  if [ ! -d $FOLDER ]; then
+      error "Unable to locate proper folder for patch ($change_id)"
+  fi
+
+  server=ssh://$USER@$SERVER_NAME:$PORT
+
+  echo -e "$(tput setaf 2)\033[1m$method: $change_id/$patchset_id to $FOLDER\033[0m"
+  pushd $FOLDER >/dev/null 2>/dev/null
+
+  # Cherry-pick
+  if [ "$method" == "cherry-pick" ]; then
+    if [ $parent_count -gt 1 ]; then
+      git fetch $server/$full_project $ref >/dev/null && git cherry-pick -m 1 FETCH_HEAD
+      exit_code=$?
+    else
+      git fetch $server/$full_project $ref >/dev/null && git cherry-pick FETCH_HEAD
+      exit_code=$?
+    fi
+  fi
+
+  # Pull
+  if [ "$method" == "pull" ]; then
+    git pull $server/$full_project $ref >/dev/null
+    exit_code=$?
+  fi
+
+  # Checkout
+  if [ "$method" == "checkout" ]; then
+    git fetch $server/$full_project $ref >/dev/null && git checkout FETCH_HEAD
+    exit_code=$?
+  fi
+
+
+  popd >/dev/null 2>/dev/null
+
+  if [ $exit_code -gt 0 ]; then
+    echo -e "\e[1;31mERROR: Cherry-pick has failed\e[0m"
+    exit $exit_code
+  fi
+}
+
+usage() {
+  echo "Usage: gerrit-cherrypick [-fop] [changenum] [...]"
+  echo "  -f = Force Cherry-pick (ignore merged state)"
+  echo "  -o = Checkout (instead of cherry-pick)"
+  echo "  -p = Pull (instead of cherry-pick)"
+  exit 1
+}
+
+# Input Validation
+if [ "$1" == "" ]; then
+  usage
+fi
+
+method=cherry-pick
+force_merge=
+
+while getopts "opfh?" arg; do
+  case $arg in
+    o)
+      method=checkout
+      shift
+      ;;
+    p)
+      method=pull
+      shift
+      ;;
+    f)
+      force_merge=1
+      shift
+      ;;
+    h)
+      usage
+      ;;
+    ?)
+      usage
+      ;;
+  esac
+done
+
+
+# Configuration Validation
+if [ ! -d $TOP ]; then
+    error "TOP must be set before using this command"
+fi
+if [ ! -f $TOP/.repo/manifest.xml ]; then
+    error "No default manifest found for $TOP"
+fi
+
+for var in "$@"
+do
+  declare -i var_s=${var}
+  cherrypick $var_s
+  exit_code=$?
+  if [ $exit_code -gt 0 ]; then
+    exit $exit_code
+  fi
+done

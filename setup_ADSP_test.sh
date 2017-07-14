@@ -1,0 +1,5 @@
+adb shell tinymix 'APM-IN1 MUX' 'ADSP-FE1'
+adb shell tinymix 'REVERB MUX' 'APM-IN1'
+adb shell tinymix 'ADMA1 MUX' 'REVERB'
+adb shell tinymix 'APM-OUT1 MUX' 'ADMA1'
+adb shell tinymix 'ADSP-ADMAIF1 MUX' 'APM-OUT1'

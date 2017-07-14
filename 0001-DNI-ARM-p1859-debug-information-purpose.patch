@@ -1,0 +1,169 @@
+From 7c47859600c0bf705ba3d82bb5793f7baad4c0ad Mon Sep 17 00:00:00 2001
+From: Shawn Joo <sjoo@nvidia.com>
+Date: Mon, 27 Oct 2014 18:09:08 +0900
+Subject: [PATCH] DNI: ARM: p1859: debug information purpose
+
+Bug 200029409
+
+Change-Id: I48c89d7cb3c7a37baea2e520517fa6d9fdaaf297
+Signed-off-by: Shawn Joo <sjoo@nvidia.com>
+---
+ arch/arm/mach-tegra/Makefile            |  1 +
+ arch/arm/mach-tegra/tegra_micro_timer.c | 76 +++++++++++++++++++++++++++++++++
+ drivers/misc/tegra-fuse/tegra_fuse.c    | 12 ++++++
+ kernel/printk.c                         | 10 +++++
+ 4 files changed, 99 insertions(+)
+ create mode 100644 arch/arm/mach-tegra/tegra_micro_timer.c
+
+diff --git a/arch/arm/mach-tegra/Makefile b/arch/arm/mach-tegra/Makefile
+index dd21192..79b2c44 100644
+--- a/arch/arm/mach-tegra/Makefile
++++ b/arch/arm/mach-tegra/Makefile
+@@ -139,5 +139,6 @@ obj-${CONFIG_TEGRA_BB_XMM_POWER2}       += baseband-xmm-power2.o
+ obj-${CONFIG_TEGRA_BASEBAND}            += tegra_bb.o
+ obj-$(CONFIG_TEGRA_BBC_PROXY)           += tegra_bbc_proxy.o
+ obj-$(CONFIG_TEGRA_BBC_THERMAL)         += tegra_bbc_thermal.o
++obj-y					+= tegra_micro_timer.o
+ 
+ 
+diff --git a/arch/arm/mach-tegra/tegra_micro_timer.c b/arch/arm/mach-tegra/tegra_micro_timer.c
+new file mode 100644
+index 0000000..da713c0
+--- /dev/null
++++ b/arch/arm/mach-tegra/tegra_micro_timer.c
+@@ -0,0 +1,76 @@
++#include <linux/sched.h>
++#include <linux/fs.h>
++#include <linux/init.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
++#include <linux/io.h>
++#include <linux/uaccess.h>
++#include "iomap.h"
++
++static void __iomem *tmrus_reg_base = IO_ADDRESS(TEGRA_TMR1_BASE);
++
++#define TIMERUS_CNTR_1US    0x10
++
++extern int tegra_fuse_init_done;
++
++u64 tegra_usec_timer_readl(void)
++{
++	if (tegra_fuse_init_done)
++		return readl(tmrus_reg_base + TIMERUS_CNTR_1US); 
++	else
++		return 0;
++}
++
++u64 tegra_current_time(void)
++{
++	return tegra_usec_timer_readl();
++}
++
++
++static int read_micro_timer_proc_show(struct seq_file *m, void *v)
++{
++	seq_printf(m, "##@ %llu\n", tegra_usec_timer_readl());
++	return 0;
++}
++
++static ssize_t write_micro_timer_proc(struct file *file, const char __user *buf,
++				size_t count, loff_t *offset)
++{
++	char buffer[64];
++
++	memset(buffer, 0, sizeof(buffer));
++	if (count > sizeof(buffer) - 1)
++		count = sizeof(buffer) - 1;
++	if (copy_from_user(buffer, buf, count))
++		return -EFAULT;
++
++	///sjoo// printk(KERN_INFO "%s: %s\n", current->comm, buffer);
++	printk(KERN_INFO "##@ %s: %s, %llu\n", current->comm, buffer,
++			tegra_usec_timer_readl());
++
++	return count;
++}
++
++
++static int read_micro_timer_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, read_micro_timer_proc_show, NULL);
++}
++
++
++static const struct file_operations read_micro_timer_proc_fops = {
++	.open           = read_micro_timer_proc_open,
++	.read           = seq_read,
++	.write		    = write_micro_timer_proc,
++	.llseek         = seq_lseek,
++	.release        = single_release,
++};
++
++static int __init proc_read_micro_timer_init(void)
++{
++	proc_create("micro_timer", S_IRUGO|S_IWUGO, NULL,
++			&read_micro_timer_proc_fops);
++	return 0;
++}
++fs_initcall(proc_read_micro_timer_init);
++
+diff --git a/drivers/misc/tegra-fuse/tegra_fuse.c b/drivers/misc/tegra-fuse/tegra_fuse.c
+index 8ccba3d..c29db05 100644
+--- a/drivers/misc/tegra-fuse/tegra_fuse.c
++++ b/drivers/misc/tegra-fuse/tegra_fuse.c
+@@ -1464,11 +1464,23 @@ u32 tegra_get_bct_strapping(void)
+ 	return tegra_chip_bct_strapping;
+ }
+ 
++static void tegra_fuse_cfg_reg_visible(void)
++{
++	/* Make all fuse registers visible */
++	u32 reg = readl(IO_ADDRESS(TEGRA_CLK_RESET_BASE + 0x48));
++	reg |= BIT(28);
++	writel(reg, IO_ADDRESS(TEGRA_CLK_RESET_BASE + 0x48));
++}
++
++int tegra_fuse_init_done;
++u64 tegra_current_time(void);
+ void tegra_init_fuse(void)
+ {
+ 	u32 sku_id;
+ 
+ 	tegra_fuse_cfg_reg_visible();
++	tegra_fuse_init_done = 1;
++	printk("##@%s fuse done..c, (%lld)\n", __func__, tegra_current_time());
+ #ifdef CONFIG_ARCH_TEGRA_21x_SOC
+ 	tegra_fuse_override_chip_option_regs();
+ #endif
+diff --git a/kernel/printk.c b/kernel/printk.c
+index 1ebf81c..fb43918 100644
+--- a/kernel/printk.c
++++ b/kernel/printk.c
+@@ -254,6 +254,12 @@ static u32 clear_idx;
+ #else
+ #define LOG_ALIGN __alignof__(struct log)
+ #endif
++
++#ifdef CONFIG_LOG_BUF_SHIFT
++#undef CONFIG_LOG_BUF_SHIFT
++#define CONFIG_LOG_BUF_SHIFT 19
++#endif
++
+ #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
+ static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
+ static char *log_buf = __log_buf;
+@@ -359,6 +365,10 @@ static void log_store(int facility, int level,
+ 		msg->ts_nsec = ts_nsec;
+ 	else
+ 		msg->ts_nsec = local_clock();
++
++	u64 tegra_current_time(void);
++	msg->ts_nsec = (u64)(tegra_current_time()*1000);
++
+ 	memset(log_dict(msg) + dict_len, 0, pad_len);
+ 	msg->len = sizeof(struct log) + text_len + dict_len + pad_len;
+ 
+-- 
+1.8.1.5
+

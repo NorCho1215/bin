@@ -1,0 +1,127 @@
+#! /usr/bin/env python
+# Copyright (c) 2013, NVIDIA CORPORATION.  All Rights Reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+import os
+import sys
+import signal
+import time
+from optparse import OptionParser
+
+from pm342 import pm342
+from pm292 import pm292
+
+halt = False
+def signal_handler(signal, frame):
+    global halt
+    halt = True
+
+def csv_report(pmxxx, duration_in_seconds=10, logfile=sys.stdout, \
+               current=False, voltage=False, list_of_items=None, gpios=[], just_avgs=False):
+    global halt
+
+    list_of_rails = [x for x in list_of_items if x in pmxxx.get_rail_names()]
+    list_of_subsets = [x for x in list_of_items if x in pmxxx.get_power_names()]
+
+    headerP = [r for r in list_of_rails]
+    headerI = ["I_" + r for r in list_of_rails] if current else []
+    headerU = ["U_" + r for r in list_of_rails] if voltage else []
+    headerG = ["GPIO%d" % g for g in gpios]
+    headerS = [r for r in list_of_subsets]
+    logfile.write(",".join(["timestamp"]
+                           + headerP + headerI + headerU + headerG + headerS))
+    logfile.write("\n")
+    start_time = time.time()
+
+    i = 0
+    sums = len(headerP + headerI + headerU + headerG + headerS) * [0.0]
+    while time.time()<start_time + duration_in_seconds and not halt:
+        P = pmxxx.get_rail_power(list_of_rails)
+        I = pmxxx.get_rail_current(list_of_rails) if current else []
+        U = pmxxx.get_rail_voltage(list_of_rails) if voltage else []
+        G = [pmxxx.get_IO("GPIO%d" % g) for g in gpios]
+        S = [pmxxx.get_power(x) for x in list_of_subsets]
+        if just_avgs:
+            sums = [x + y for x, y in zip(sums, P + I + U + G + S)]
+            i += 1
+        else:
+            logfile.write(",".join([str(x) for x in [time.time()-start_time]
+                                + P + I + U + G + S]))
+            logfile.write("\n")
+            logfile.flush()
+    if just_avgs:
+        avgs = [(x/i) for x in sums]
+        logfile.write(",".join([str(x) for x in [time.time()-start_time] + avgs]))
+        logfile.write("\n")
+        logfile.flush()
+
+if __name__=="__main__":
+    signal.signal(signal.SIGINT, signal_handler)
+    pm342_targets = pm342.supported_targets
+    pm292_targets = pm292.supported_targets
+
+    parser = OptionParser()
+    parser.set_defaults(duration=10,logfile=sys.stdout)
+    parser.add_option("--duration", "-d", action="store", type="int",
+                      dest="duration", help="capture duration in seconds")
+    parser.add_option("--outfile", "-o", action="store", type="string",
+                      dest="logfile", help="file to which sample data should be written")
+    parser.add_option("--target", "-t", action="store", type="string",
+                      dest="target", help="Target board [%s]" % " | ".join(pm342_targets + pm292_targets))
+    parser.add_option("--variant", "-v", action="store", type="string",
+                      dest="variant", help="Target board variant [daq]")
+    parser.add_option("--calibration", "-c", action="store", type="string",
+                      dest="calibration", help="Target board calibration [max | min]")
+    parser.add_option("--serial", "-s", action="store", type="string",
+                      dest="serial", help="Serial of debug board. Defaults to the value of PMXXX_SERIAL environment variable.")
+    parser.add_option("--rails", "-r", action="store", type="string",
+                      dest="rails", help="Rails or subsets to measure")
+    parser.add_option("--enable_usb", "-u", action="store_true", default=False,
+                      dest="enable_usb", help="Enable USB bypass")
+    parser.add_option("--just_averages", "-a", action="store_true", default=False,
+                      dest="just_avgs", help="Only print averages")
+    parser.add_option("--current", "", action="store_true", default=False,
+                      dest="current", help="Also measure current")
+    parser.add_option("--voltage", "", action="store_true", default=False,
+                      dest="voltage", help="Also measure voltage")
+    parser.add_option("--profile", "-p", action="store", type="string",
+                      dest="profile", default="medium",
+                      help="Set sampling profile [low | medium | high]")
+    parser.add_option("--gpio", "-g", action="append", default=[], type="int",
+                      dest="gpios", help="log GPIO status")
+    (options, args) = parser.parse_args()
+
+    if options.serial is None and "PMXXX_SERIAL" in os.environ:
+        options.serial = os.environ["PMXXX_SERIAL"]
+        print >>sys.stderr, "NOTE: Using --serial=%s from environment." % options.serial
+
+    if options.target in pm342_targets:
+        pmxxx = pm342(serial = options.serial, target = options.target, variant = options.variant,
+                      calibration = options.calibration,
+                      enable_usb = options.enable_usb)
+    elif options.target in pm292_targets:
+        pmxxx = pm292(serial = options.serial, target = options.target, variant = options.variant,
+                      calibration = options.calibration,
+                      enable_usb = options.enable_usb)
+    else:
+        print ("'%s' is not a supported target board\nUse one of following: [%s]" %
+               (options.target, " | ".join(pm342_targets + pm292_targets)))
+        exit(1)
+
+    if options.logfile != sys.stdout:
+        options.logfile = file(options.logfile,'w')
+
+    if options.rails:
+        rails = options.rails.split()
+    else:
+        rails = pmxxx.get_rail_names()
+
+    pmxxx.set_sampling_profile(options.profile + "_frequency")
+
+    csv_report(pmxxx, options.duration, options.logfile, options.current, options.voltage, rails, options.gpios, options.just_avgs)
+

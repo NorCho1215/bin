@@ -1,0 +1,33 @@
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+static int _fd = 0;
+#define UT_TRACE(fmt, ...) do { \
+    char _buf[64];\
+    if (_fd == 0) { \
+        _fd = open("/proc/micro_timer", O_RDWR); \
+    } \
+    sprintf(_buf, fmt, ##__VA_ARGS__);\
+    write(_fd, _buf, sizeof(_buf));\
+}while(0)
+
+static int Get_Nor_flsah_buffer()
+{
+    int fd;
+    char buf[PROPERTY_VALUE_MAX] = "";
+    fd=open( "/dev/mtd/mtd0",O_RDONLY);
+    read(fd, buf,9);
+    close(fd);
+    //UT_TRACE("Nor debug read buf ~~~ %s",buf);
+    if(!strcmp(buf,"early=cam"))
+        return Camera_Flag;
+    else if(!strcmp(buf,"early=vid"))
+        return Video_Flag;
+    else if(!strcmp(buf,"early=gpi"))
+        return Gpio_Flag;
+    else
+        return Non_Flag;
+}
+
+enum NorFlashFlag { Camera_Flag, Video_Flag, Gpio_Flag, Non_Flag };

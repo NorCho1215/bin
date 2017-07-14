@@ -1,0 +1,3 @@
+P4PORT=p4proxy-taipei:2006
+P4CLIENT=ncho_android_minimal
+P4USER=ncho

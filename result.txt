@@ -1,0 +1,4 @@
+<<<Start noise scanner>>>>
+BAND FM From 9970 to 9972
+Freq=9970 REG_LEVEL=0:: 0x63 Level 41=dB
+Freq=9971 REG_LEVEL=0:: 0x63 Level 41=dB

@@ -1,0 +1,321 @@
+#! /usr/bin/env python
+# Copyright (c) 2014, NVIDIA CORPORATION.  All Rights Reserved.
+#
+# NVIDIA CORPORATION and its licensors retain all intellectual property
+# and proprietary rights in and to this software, related documentation
+# and any modifications thereto.  Any use, reproduction, disclosure or
+# distribution of this software and related documentation without an express
+# license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+import sys, time
+import metadata
+import re
+from utils import *
+from optparse import OptionParser
+
+pth='/tmp/measure/'
+sf_default_dur = 0.25
+
+def process_hist(lines):
+    s = 0.0
+    for l in lines:
+        try:
+            ls = l.split()
+            val = int(ls[0])
+            perc = float(ls[1][0:-1])
+            s += val * perc
+        except:
+            break
+    s /= 100.0
+    return s
+
+def process_cores(lines):
+    s = 0.0
+    for l in lines:
+        try:
+            ls = l.split()
+            val = int(ls[0])
+            if val == 4: # exclude LP cluster
+                continue
+            perc = float(ls[1][0:-1])
+            s += perc
+        except:
+            break
+    s /= 100.0
+    return s
+
+def parse_powersig(f):
+    lines = open(f).read().split('\n')
+
+    clk_cpu = 0
+    clk_gpu = 0
+    clk_emc = 0
+    vdd_cpu = 0.0
+    vdd_gpu = 0.0
+    vdd_core = 0.0
+    core_online = 0.0
+    chunk_start = 0
+    for i in range(len(lines)):
+        if lines[i] == '' or lines[i] == '\r':
+            chunk_end = i
+            chunk = lines[chunk_start:chunk_end]
+            if len(chunk) < 3:
+                continue
+            if 'cpu clk histogram' in chunk[0]:
+                clk_cpu = int(process_hist(chunk[2:]))
+            if 'gbus histogram' in chunk[0]:
+                clk_gpu = int(process_hist(chunk[2:]))/1000
+            if 'mclk histogram' in chunk[0]:
+                clk_emc = int(process_hist(chunk[2:]))/1000
+            if 'vdd_cpu histogram' in chunk[0]:
+                vdd_cpu = float(process_hist(chunk[2:]))/1000
+            if 'vdd_core histogram' in chunk[0]:
+                vdd_core = float(process_hist(chunk[2:]))/1000
+            if 'vdd_gpu histogram' in chunk[0]:
+                vdd_gpu = float(process_hist(chunk[2:]))/1000
+            if 'core online histogram' in chunk[0]:
+                core_online = float(process_cores(chunk[2:]))
+            chunk_start = i+1
+            if chunk_start < len(lines)-1 and lines[chunk_start] == '':
+                chunk_start += 1
+    return (clk_cpu,clk_gpu,clk_emc,vdd_cpu,vdd_gpu,vdd_core,core_online)
+
+def parse_nvpm_power(f):
+    pwr_cpu = 0
+    pwr_gpu = 0
+    pwr_core = 0
+    pwr_dram = 0
+    pwr_apram = 0
+    pwr_bat = 0
+    vdd_cpu = 0.0
+    vdd_gpu = 0.0
+    vdd_core = 0.0
+
+    ls = open(f).read().rstrip().split('\n')
+    rails = [x.lower() for x in ls[0].split(',')]
+    vals = len(rails)*[0.0]
+    tot = 0
+    for l in ls[1:]:
+        lvals = l.split(',')
+        for i in range(len(lvals)):
+            vals[i] += float(lvals[i])
+        tot += 1
+    if tot == 0:
+        print_error('power measurement failed')
+        return (0,0,0,0,0,0,0,0,0)
+    for i in range(len(vals)):
+        vals[i] /= tot
+        if rails[i] == 'cpu':
+            pwr_cpu = int(vals[i])
+        if rails[i] == 'gpu':
+            pwr_gpu = int(vals[i])
+        if rails[i] == 'core':
+            pwr_core = int(vals[i])
+        if rails[i] == 'dram':
+            pwr_dram = int(vals[i])
+        if rails[i] == 'apram':
+            pwr_apram = int(vals[i])
+        if rails[i] == 'total_power':
+            pwr_bat = int(vals[i])
+        if rails[i] == 'u_vdd_cpu':
+            vdd_cpu = float(vals[i])
+        if rails[i] == 'u_vdd_gpu':
+            vdd_gpu = float(vals[i])
+        if rails[i] == 'u_vdd_core':
+            vdd_core = float(vals[i])
+    if pwr_apram == 0 and (pwr_cpu + pwr_gpu + pwr_core + pwr_dram) != 0:
+        pwr_apram = int(pwr_cpu + pwr_gpu + pwr_core + pwr_dram)
+
+    if pwr_cpu < -50 or pwr_gpu < -50 or pwr_core < -50 or pwr_dram < -50 or pwr_cpu > 15000 or pwr_gpu > 15000 or pwr_dram > 5000:
+        print_warning('Power output does not match expectations')
+
+    return (pwr_cpu, pwr_gpu, pwr_core, pwr_dram, pwr_apram, pwr_bat, vdd_cpu, vdd_gpu, vdd_core)
+
+def get_fps(expected_duration=-1):
+    res = cmd('adb logcat -d | grep SurfaceFlinger').rstrip()
+    savefile = file(pth + 'fps.txt','w')
+
+    samples = []
+    sumDur = 0
+    sumFc = 0
+
+    # Discard the first 2 readings since they can be un-reliable, parse all others
+    for l in res.splitlines()[2:]:
+        savefile.write(l + '\n')
+        try:
+            newform = re.search(r' (\d+) frames (\d+) ms ([0-9\.]+) fps', l)
+            if newform:
+                # we have the new SurfaceFlinger output that includes fc and dur
+                sumDur += float(newform.group(2))/1000.0
+                sumFc += int(newform.group(1))
+                samples.append(float(newform.group(3)))
+            else:
+                oldform = re.search(r' ([0-9\.]+) fps', l)
+                if oldform:
+                    # we have the old SurfaceFlinger output with just fps, assume duration is 250ms
+                    fps = float(oldform.group(1))
+                    sumDur += sf_default_dur
+                    sumFc += fps * sf_default_dur
+                    samples.append(fps)
+        except:
+            pass
+
+    # No samples is an error
+    if sumDur <= 0 or len(samples) == 0:
+        print_error('SurfaceFlinger FPS output error')
+        return (0.0, 0.0, 0.0, 0.0)
+
+    # Less than expected duration is a warning
+    if sumDur < (0.75 * expected_duration):
+        print_warning('SurfaceFlinger FPS output may not match expectations')
+
+    fps_avg = float(sumFc)/float(sumDur)
+    fps_stddev = stddev(samples)
+    fps_min = min(samples)
+    fps_max = max(samples)
+    return (fps_avg, fps_stddev, fps_min, fps_max)
+
+def format_line(name, values):
+    res = '%18s ' % name
+    for v in values:
+        if type(v) is float:
+            if v < 10.0:
+                res += '%6s' % ('%.2f' % v)
+            else:
+                res += '%6s' % ('%.1f' % v)
+        elif type(v) is int:
+            res += '%6s' % ('%4d' % v)
+        else:
+            v = str(v)
+            res += '%6s' % v
+    return res
+
+def generate_uid(numchar):
+    import uuid
+    uid = str(uuid.uuid4().hex)
+    return uid[0:numchar]
+
+if __name__=="__main__":
+    # Check for common errors
+    if 'device' not in cmd('adb get-state'):
+        print_error('no adb access', fatal=True)
+    if 'powersig' not in ash('ls /system/vendor/bin/') + ash('ls /system/bin/'):
+        print_error('powersig is not installed\n\n\tcd $TEGRA_TOP/tests/power_signature/\n\tmm; adb sync', fatal=True)
+
+    # collect metadata
+    board = metadata.get_board()
+    uid = generate_uid(6)
+    trgt = metadata.get_frt()
+
+    # check that we're in the local directory, and board is supported
+    r = cmd('./measure_power --help', wait=True)
+    if 'command not found' in r:
+        print_error('script must be run from local directory $TEGRA_TOP/tools-private/board_automation', fatal=True)
+    if not board in r:
+        print_error('your board ' + board + ' is not supported by the measure_power scripts')
+
+    # check if we have udev permissions (and thus wouldn't need sudo)
+    r = cmd('./measure_power -u -t ' + board + ' -d 0', wait=True)
+    have_udev = 'Unable to open device' not in r
+
+    # Create a folder for temp or permanent files
+    cmd('mkdir ' + pth)
+
+    # Parse options
+    parser = OptionParser(epilog="""Measuring power through the pm342 requires root access to the USB device.\n
+                                    This can be achieved in several ways                                     \n
+                                      (1) Modify the UDEV rules as explained in the wiki http://nv/pm342_udev\n
+                                      (2) Add the local measure_power to your visudo list\n
+                                      (3) Enter your sudo password when prompted""")
+
+    parser.set_defaults(duration=60,logfile=sys.stdout, name='')
+    parser.add_option("--duration", "-d", action="store", type="int",
+                      dest="duration", help="capture duration in seconds")
+    parser.add_option("--outfile", "-o", action="store", type="string",
+                      dest="logfile", help="file to which results should be written")
+    parser.add_option("--variant", "-v", action="store", type="string",
+                      dest="variant", help="Target board variant [daq]")
+    parser.add_option("--name", "-n", action="store", type="string",
+                      dest="name", help="String describing this test")
+    parser.add_option("--app", "-a", action="store", type="string", default="",
+                      dest="appid", help="App ID code")
+    parser.add_option("--save_files", "-s", action="store_true", default=False,
+                      dest="save_files", help="Save the full output files into " + pth)
+    (options, args) = parser.parse_args()
+
+    printHeader = True
+
+    if options.logfile != sys.stdout:
+        try:
+            if 'clk' in open(options.logfile).read():
+                printHeader = False
+        except:
+            pass
+        options.logfile = file(options.logfile,'a')
+
+    if options.variant:
+        var_str = ' -v ' + options.variant
+    else:
+        var_str = ''
+
+    # Clear any previous results
+    cmd('rm -f ' + pth + 'nvpm.txt; rm -f '+ pth + 'powersig.txt; rm -f ' + pth + 'fps.txt')
+
+    # Start power measurement
+    sudo_str = '' if have_udev else 'sudo '
+    cmd(sudo_str + './measure_power --voltage -u -t ' + board + var_str + ' -d ' + str(options.duration) + ' -a -r "CPU GPU CORE DRAM APRAM" -o ' + pth + 'nvpm.txt', wait=False)
+
+    # Start powersig
+    ash('powersig --time ' + str(options.duration) + ' --out /sdcard/powersig.txt', wait=False)
+
+    # Enable SurfaceFlinger fps logging
+    cmd('adb shell service call SurfaceFlinger 1001 i32 1')
+
+    # Clear the logcat
+    cmd('adb logcat -c', noisy=True)
+
+    # Sleep for duration of test
+    noisy_sleep(options.duration, "measuring ")
+    time.sleep(2)
+    print '...complete'
+
+    # Disable SurfaceFlinger fps logging
+    cmd('adb shell service call SurfaceFlinger 1001 i32 0')
+
+    # Collect the temperatures
+    cpu_temp, skin_temp = metadata.get_temperature()
+
+    # Collect FPS
+    fps_avg, fps_stddv, fps_min, fps_max = get_fps(expected_duration=options.duration)
+
+    # Collect powersig
+    cmd('adb pull /sdcard/powersig.txt ' + pth + 'powersig.txt')
+    clk_cpu,clk_gpu,clk_emc,sw_vdd_cpu,sw_vdd_gpu,sw_vdd_core,core_online = parse_powersig(pth + 'powersig.txt')
+
+    # Collect nvpm power
+    pwr_cpu, pwr_gpu, pwr_core, pwr_dram, pwr_apram, pwr_bat, hw_vdd_cpu, hw_vdd_gpu, hw_vdd_core = parse_nvpm_power(pth + 'nvpm.txt')
+
+    # Generate some derivative values
+    vdd_cpu = sw_vdd_cpu if hw_vdd_cpu == 0.0 else hw_vdd_cpu
+    vdd_gpu = sw_vdd_gpu if hw_vdd_gpu == 0.0 else hw_vdd_gpu
+    vdd_core = sw_vdd_core if hw_vdd_core == 0.0 else hw_vdd_core
+    fpj = 0 if pwr_apram == 0 else 1000*fps_avg/pwr_apram
+    fpj_cpu = 0 if pwr_cpu == 0 else 1000*fps_avg/pwr_cpu
+
+    # Write out results
+    if printHeader:
+        options.logfile.write('* board ' + board + ' ' + metadata.get_resolution() + '\n')
+        options.logfile.write('* image ' + metadata.get_image() + ' ' + metadata.get_mts_version() + '\n')
+        options.logfile.write('* speedo/iddq ' + metadata.get_speedo_iddq() + '\n')
+        options.logfile.write('* max_freqs ' + metadata.get_max_freqs() + '\n')
+        options.logfile.write('\n')
+        options.logfile.write('                                             ------fps-------  ------clk-------  ------vdd-------  -#G-  ---------------pwr----------------  ---temp---  ---fpj----\n')
+        options.logfile.write('            config    uid   app  trgt  time   avg   min  stdv   cpu   gpu   emc   cpu   gpu  core  core   cpu   gpu  core  dram apram   sys   cpu  skin   cpu apram\n')
+        options.logfile.write(' \n')
+
+    options.logfile.write(format_line(options.name, [uid, options.appid, trgt, options.duration, fps_avg, fps_min, fps_stddv, clk_cpu, clk_gpu, clk_emc, vdd_cpu, vdd_gpu, vdd_core, core_online, pwr_cpu, pwr_gpu, pwr_core, pwr_dram, pwr_apram, pwr_bat, cpu_temp, skin_temp, fpj_cpu, fpj]) + "\n")
+
+    if options.save_files:
+        cmd('mv ' + pth + 'nvpm.txt ' + pth + uid + '_nvpm.txt')
+        cmd('mv ' + pth + 'powersig.txt ' + pth + uid + '_powersig.txt')
+        cmd('mv ' + pth + 'fps.txt ' + pth + uid + '_fps.txt')

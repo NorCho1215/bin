@@ -1,0 +1,561 @@
+77. DAB no sound.
+http://nvbugs/200267327/12
+adb shell "saf775x_util vset pri-mute 0x07ff"
+adb shell "saf775x_util vset pri-vol1 0x00ff"
+adb shell "saf775x_util vset pri-vol2 0x0080"
+
+76. change DTB to DTS.
+
+dtc -I dtb -O dts -o tegra186-vcm31-p2382-010-a01-00-base-vm.dts tegra186-vcm31-p2382-010-a01-00-base-vm.dtb
+
+75. ADSP on native android
+
+http://git-master/r/#/c/1300510/ ; nvfx: add reverb and wire plugin for SDK
+http://git-master/r/#/c/1301098/ ; [make] add reverb and wire plugin for adsp_fw
+
+$adb shell "tinymix 'ADSP init' '1'"
+#===== REVERB
+adb shell "tinymix 'APM-IN1 MUX' 'ADSP-FE1'"
+adb shell "tinymix 'REVERB MUX' 'APM-IN1'"
+adb shell "tinymix 'ADMA1 MUX' 'REVERB'"
+adb shell "tinymix 'APM-OUT1 MUX' 'ADMA1'"
+adb shell "tinymix 'ADSP-ADMAIF1 MUX' 'APM-OUT1'"
+adb shell tinyplay /sdcard/tiny_test02.wav -D 0 -d 154
+#===== WIRE
+adb shell "tinymix 'APM-IN2 MUX' 'ADSP-ADMAIF1'"
+adb shell "tinymix 'ADMA2 MUX' 'APM-IN2'"
+adb shell "tinymix 'WIRE MUX' 'ADMA2'"
+adb shell "tinymix 'APM-OUT2 MUX' 'WIRE'"
+adb shell "tinymix 'ADSP-FE1 MUX' 'APM-OUT2'"
+adb shell tinycap /sdcard/rec.wav -D 0 -d 154
+
+74. NextEV
+./hypervisor/tools/uart_muxer/uart_muxer -g 11 -b 10 -d /dev/ttyUSB0
+
+
+73.HV+L adb tool.
+# sudo add-apt-repository ppa:nilarimogard/webupd8
+# sudo apt-get update
+# sudo apt-get install android-tools-adb android-tools-fastboot
+
+72. promotion team
+SW-Mobile-Promotions
+
+71. SPI speed. (PG)
+adb shell cat /sys/kernel/debug/clock/sbc4/rate
+
+70. Android.mk make file debug.
+$(warning Nor debug ~~ '$(xxxx)')
+
+69. sync error.
+repo sync --force-sync -cj8
+
+68. debug audio adma/pcm
+lsof | grep pcm
+cat  /proc/interrupts |grep adma
+
+67. sudo -S /home/ncho/bin/build_V4A_l.sh
+linux build command.
+
+66. fs-nfs3 -t 10.19.106.164:/home/ncho/1T/image/m-os/bb /a
+
+65. echo "password" | sudo -S netstat -tlnp
+
+　　-S
+
+　　The -S (stdin) option causes sudo to read the password from the standard input instead of the terminal device.
+
+64. check android version
+getprop ro.build.version.release
+6.0 M
+7.0 N
+
+63. L+Q+A
+https://wiki.nvidia.com/engwiki/index.php/Embedded/Virtualization/V4L_PRC2.5_plus_V4Q_alpha4_plus_V4A_RC
+https://wiki.nvidia.com/engwiki/index.php/EmbeddedHome/Setup/Linux/Network/NFS
+
+62. nxp key code
+4 - FM PD 
+5 - FM CEQ 
+6 - AM PACS 
+9 - FMSI 
+10 - Dual AM WB 
+48 - ADC45 
+49 - DACS45 
+53 - Polychime 
+54 - PMC 
+55 - ALE
+
+61. keyevent
+sudo adb shell input keyevent 82 (Unlock screen) 
+sudo adb shell  input keyevent 61 (TAB) 
+sudo adb shell  input keyevent 23 (Enter) 
+sudo adb shell  input keyevent 4 (KEYCODE_BACK) 
+sudo adb shell  input keyevent 3 (KEYCODE_HOME) 
+sudo adb shell  input keyevent 67 (Delete) 
+sudo adb shell  input keyevent 19, 20, 21, 22: up, down, left, right
+
+60. build_script clone and reviewer.
+
+git clone ssh://ncho@git-master.nvidia.com:12001/tools/build-scripts -b master
+git clone ssh://ncho@git-master.nvidia.com:12001/nv-git-07/manifest/standard -b main
+git clone ssh://git-master:12001/nv-git-07/manifest/binary.git -b main
+git clone ssh://git-master:12001/nv-git-07/manifest/camera.git -b main
+git clone ssh://git-master:12001/nv-git-02/manifest/google.git -b main
+git clone ssh://git-master:12001/nv-git-07-private/manifest/roth.git -b main
+SW-Mobile-Release <SW-Mobile-Release@exchange.nvidia.com>
+
+59.
+ES board
+ANDROID_BUILD_FLAVOR=release NV_GIT_TOP=$PWD/../sanity ./utils/scripts/bootburn/bootburn.sh -a -b p2382-t186 -L
+
+58. check sanity test on GVS.
+
+http://dvsweb.nvidia.com/DVSWeb/view/content/vrl/job/jobs.jsf?os=android&cpu=p2382-10&limit=300&testname=ap_audio&notes=rel-25
+http://dvsweb.nvidia.com/DVSWeb/view/content/vrl/job/jobs.jsf?os=android&cpu=p2382-10&limit=300&testname=ap_video&notes=rel-25
+
+57. set android date and time.
+/home/ncho/bin/adb shell "date `date +%m%d%H%M%Y.%S`"
+
+56. mix the sine-wave with music.
+adb shell saf775x_util pset sine-wave-out sec2-input
+adb shell saf775x_util vset sec2-mute 0x7ff
+adb shell saf775x_util vset sec2-vol1 0x01f
+adb shell saf775x_util vset sec2-vol2 0x536
+sleep 1
+adb shell tinymix -D 0 "I2S4 Mux" "AMX1"
+adb shell tinymix -D 0 "AMX1-1 Mux" "MIXER1-1"
+adb shell tinymix -D 0 "MIXER1-1 Mux" "ADMAIF1"
+adb shell tinymix -D 0 "MIXER1-2 Mux" "ADX1-1"
+adb shell tinymix -D 0 "Adder1 RX2" "1"
+adb shell tinymix -D 0 "Adder1 RX1" "1"
+adb shell tinymix -D 0 "Mixer Enable" "1"
+
+
+55. scp
+scp localfile username@tohostname:/newfilename
+
+54. Memory leakage
+adb shell su root procrank
+
+53. git-07
+standard 
+repo init -u git://nv-git-07.nvidia.com:29418/out/bsp/manifest/android/standard.git -b embedded/25.05.03 -m classic/msmedia/vcm31t186.xml
+
+binary 
+repo init -u git://nv-git-07.nvidia.com:29418/out/bsp/manifest/android/binary.git -b embedded/25.05.03-partner -m classic/vcm31t186.xml
+
+google 
+repo init -u git://nv-git-07.nvidia.com:29418/out/bsp/manifest/android/google.git -b embedded/25.05.03-partner -m classic/vcm31t186.xml
+
+
+52. search cpp macro
+arm-linux-androideabi-cpp -dM < /dev/null | sort | grep __CHAR16
+#define __CHAR16_TYPE__ short unsigned int
+
+51. V4V HV+ andoird
+
+android: export SECURE_OS_BUILD=n && export TOP=`pwd` && source build/envsetup.sh  && setpaths && choosecombo 1 vcm31t186ref 3 && mp dev #V4VA
+cd $HOME/foundation
+source tmake/scripts/envsetup.sh && choose embedded-foundation t186ref none release && source foundation/mk_blob.sh && export NV_BUILD_CONFIGURATION_IS_VERBOSE=1 && tmp && tmp systemimage  ## V4VF
+bind_partitions android -b p2382-t186 #V4VP
+export TOP_V4F=`pwd` && ANDROID_TARGET_DEVICE=vcm31t186 eenv ./embedded/tools/scripts/t186_bootburn/bootburn.sh -b p2382-t186 -M -H #V4V Flash
+Build uart_muxer from “foundation/hypervisor/hypervisor-a15/tools/uart_muxer” using “make”. # V4V UART_MUXER
+sudo ./uart_muxer -g 7 -b 6 -d /dev/ttyUSB0 # V4V
+sudo minicom –D /dev/pts/28  #V4V android 
+
+50. loopback Ahub
+adb shell tinymix -D 0 'AMX1-1 Mux' 'ADMAIF1'
+adb shell tinymix -D 0 'ADX1 Mux' 'AMX1'
+adb shell tinymix -D 0 'ADMAIF1 Mux' 'ADX1-1'
+adb shell tinyplay /sdcard/tiny_test02.wav &
+adb shell tinycap /data/cap.wav -D 0 -d 0 -c 2 -r 48000 -b 16
+
+49. Audio Ahub check
+soc/tegra-snd-t210ref-mobile-fpga/tegra210-admaif/dapm
+
+48. GVS DEPEND
+DEPENDS ON: <None>
+IGNORE_GVS
+
+47. .export fucntion
+grep "pcore_err_t lltuner_" src/dirana3tuner.c -rns |awk '{print $2 " " $3}' |sed 's/pcore_err_t//g' |sort |tee 1.list
+
+46. dev-kernel
+git clone ssh://ncho@git-master.nvidia.com:12001/linux-3.10-t18x -b dev-kernel-3.10
+git clone ssh://ncho@git-master.nvidia.com:12001/linux-3.18 -b dev-kernel-3.18
+
+
+45. modify manifest
+git clone ssh://ncho@git-master.nvidia.com:12001/tegra/manifest -b main
+modify manifest
+git push origin HEAD:refs/for/main
+
+44. clock tree
+adb shell cat /d/bpmp/debug/clk/clk_tree
+
+43. GVS rule
+DEPENDS ON:<None> kernel: android-tegra-nv-3.10 android-tegra-nv-3.18 dev-kernel-3.18 dev-kernel-3.10
+
+42.find release image.
+\\sc-netapp15\mobile_1\Android\R24\24.05\vcm31t210ref\tlk
+\\netapp39\linuxbuilds\daily\Embedded\BuildBrain\Android\vcm31t210ref\embedded-24.05\
+
+41. keyword GVS 
+virtualrequires_p1-automotive   virtualrequires_p1-nxp 
+
+40. check the output display type.
+adb shell cat d/tegradc.0/out_type
+
+39. manifest snapshot
+repo manifest -o snapshot.xml -r
+
+38. check the card name.
+adb shell ls -l /proc/asound/
+<card name="tegrasndp2382"> --> nvaudio_conf.xml
+
+37. adb shell service list
+
+36.Phidget control
+Install package
+
+sudo apt-get install libftdi1 python-ftdi
+cd $TOP/vendor/nvidia/tegra/tools-private/board_automation
+
+Power on (OK)
+
+sudo python boardctl -t pm342 power_on
+
+Power off (OK)
+
+sudo python boardctl -t pm342 power_off
+
+Reset Tegra (OK)
+
+sudo python boardctl -t pm342 reset
+
+Force recovery (OK)
+
+sudo python boardctl -t pm342 recovery
+
+Onkey (Failed; see http://nvbugs/200122097)
+
+sudo python boardctl -t pm342 onkey
+Unable to resume system from suspend by phidget but USB mouse
+
+35. sepolicy
+sudo apt-get install policycoreutils
+adb shell su -c dmesg | audit2allow -p $OUT/root/sepolicy
+
+
+34. samba setting
+sudo smbpasswd -a ncho
+sudo smbpasswd -e ncho
+
+
+33. Nissan panel
+flash -- -d tegra124-android-p1889-hdmiprimary_nissanalt.dtb
+
+32. get audio code from server.
+cd $TOP/vendor/nvidia/tegra/3rdparty  ## nxp
+mkdir nxp-firewall
+cd nxp-firewall
+git clone ssh://ncho@git-embedded-restricted.nvidia.com:12008/nxp-firewall/dirana3
+export NXP_BUILD=1
+ex: export NXP_HEADER=/home/ncho/1T/V4A_main/dirana3/R7.0
+
+31. create system image
+mv $OUT/system.img $OUT/system.img.olg && make_ext4fs -s -T -1 -S $OUT/root/file_contexts -l 1342177280 -a system $OUT/system.img $OUT/system
+
+30. power on.
+adb shell svc power stayon true
+
+29. Code trace 
+#find the all Android mk for which module.
+find ./ -name Android.mk | xargs grep [module_name]
+
+28. build and flash V4A
+cd foundation
+export TOP_V4F=`pwd` && source tmake/scripts/envsetup.sh && choose embedded-foundation t210ref none release && tmp  ## V4AF
+cd ../android
+export TOP=$(pwd) && export SECURE_OS_BUILD=n && . build/envsetup.sh && setpaths && choosecombo 1 drive_ref 3 ##V4AA
+cd $TOP_V4F
+ANDROID_BUILD_FLAVOR=release ./vibrante-t210ref-foundation/utils/scripts/bootburn/bootburn.sh -a -b p2382a00
+ANDROID_BUILD_FLAVOR=release flash -a -b p2382a00
+# Partitions : DTB_PRIMARY(kernel .dtb), KERNEL_PRIMARY(boot.img), APP(system.img)
+ANDROID_BUILD_FLAVOR=release eenv $TOP_V4F/embedded/tools/scripts/t210_bootburn/bootburn.sh -a -b p2382a00 -u KERNEL_PRIMARY
+ANDROID_BUILD_FLAVOR=release eenv $TOP_V4F/embedded/tools/scripts/t210_bootburn/bootburn.sh -a -b p2382a00 -R
+ANDROID_BUILD_FLAVOR=release flash -a -b p2382a00 -u KERNEL_PRIMARY
+GVS flash 
+ANDROID_BUILD_FLAVOR=debug ./vibrante-t210ref-foundation/utils/scripts/bootburn/bootburn.sh -a -b p2382a00 # flash
+
+27. Test CVBS command from ADB.
+adb shell system/vendor/bin/nvmedia_CVBScapture -cf /early/early_camera_ADV7281.conf -c cvbs-480i-yuv422 -d 0 -w 1 -z 1
+adb shell /system/bin/am start com.nvidia.earlycamera/.EarlyCameraActivity
+adb shell hwcservice -p
+
+
+26. rel-23 saf775x audio porting
+* tegra/core-private
+http://git-master/r/#/c/730074/ ; utils: saf775x: Add utility to control Dirana
+http://git-master/r/#/c/741508/ ; utils: saf775x: Add flashing support to utility
+http://git-master/r/#/c/747673/ ; utils: saf775x: TDM slot selection from utility
+
+25. Radio name space
+RDS/TDM --> http://www.smartlab.iii.org.tw/Knowledge/Detail/1002
+GNEIVI --> ttps://www.ctimes.com.tw/DispNews/tw/%E8%BB%8A%E8%BC%89%E5%A8%9B%E6%A8%82%E7%B3%BB%E7%B5%B1/Telematics/GENIVI/131016170581.shtml
+     http://wiki.projects.genivi.org/index.php/Main_Page
+MOST : https://zh.wikipedia.org/wiki/MOST
+MOST Cooperation : http://www.mostcooperation.com/
+VICS : Vehicle Information and Communication System ( https://en.wikipedia.org/wiki/Vehicle_Information_and_Communication_System ) This service has operated since 1996 in the Tokyo.
+     AF (alternative frequencies)
+     CT (clock time)
+     EON (enhanced other networks)
+     PI (programme identification)
+     PS (programme service)
+     PTY (programme type)
+     REG (regional)
+     RT (radio text)
+     TA, TP (traffic announcement, traffic programme)
+     TMC (traffic message channel)
+RDS : Radio Data System ( https://en.wikipedia.org/wiki/Radio_Data_System ) 
+RBDS : Radio Broadcast Data System
+DARC : Data Radio Channel ( https://en.wikipedia.org/wiki/Data_Radio_Channel )
+DAB : Digital Audio Broadcasting ( https://en.wikipedia.org/wiki/Digital_Audio_Broadcasting )
+SCIDI : Service Component Identifier Internal (SCIDI)
+TPEG : Transport Protocol Experts Group (https://en.wikipedia.org/wiki/TPEG)
+SDARS: Satellite Digital Audio Radio Service
+Satellite radio : ( https://en.wikipedia.org/wiki/Satellite_radio )
+
+24. p4 server
+p4syseng:2007
+p4proxy-taipei:2006
+
+23. CTS 
+sudo su
+export PATH=/usr/lib/jvm/java-7-openjdk-amd64/bin:$PATH
+cd /home/ncho/Projects/upload/Nvbug/CTS/Android_L/android-cts-5.1_r0.9-1786946-arm/android-cts/tools/
+./cts-tradefed
+
+22. fix minicom width
+ctrl+a > z  > lineWrap on/off....W
+
+21. build V3L
+source tmake/scripts/envsetup.sh
+choose embedded-linux vcm30t124 none release external x11
+export NV_BUILD_CONFIGURATION_IS_VERBOSE=1
+flash -e -r mmcblk0 -F "/dev/block/mmcblk0 ext4 $TEGRA_TOP/out/embedded-linux-vcm30t124-release/target_rootfs/"
+
+20. MVS
+git clone ssh://ncho@git-master.nvidia.com:12001/tegra/manifest -b rel-23
+git clone ssh://ncho@git-master.nvidia.com:12001/nv-git-07/manifest/standard -b rel-23
+cd ~/MVS/mobile-virtual/MVSClient
+expor PATH=$PATH:~/MVS/mobile-virtual/MVSClient
+echo 'PATH=$PATH:~/MVS/mobile-virtual/MVSClient' >> ~/.profile
+ncho@ncho-HP-Compaq-6200-Pro-MT-PC:~/1T/manifest$ export TOP=$(pwd)
+ncho@ncho-HP-Compaq-6200-Pro-MT-PC:~/1T/manifest$ mvs.sh -f rel-23 --just-manifest --manifest-branch rel-23 --manifest-name android.xml \
+> --send-manifest $TOP/manifest/android.xml \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/android-partner.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/create_branch.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/delivery.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/push_to_nvgit07_android-partner.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/push_to_nvgit07_android.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/android-aosp-master.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/android-l-mr1-preview.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/android-licensed.xml# \
+> --additional-manifest tegra/manifest.git@rel-23:$TOP/manifest/android-pdk-volantis.xml# \
+> --additional-manifest nv-git-07/manifest/standard.git@rel-23:$TOP/standard/tlk/p1859.xml#tlk/ \
+> --additional-manifest nv-git-07/manifest/standard.git@rel-23:$TOP/standard/tlk/ardbeg.xml#tlk/ \
+> --additional-manifest nv-git-07/manifest/standard.git@rel-23:$TOP/standard/tlk/t210.xml#tlk/ \
+> --additional-manifest nv-git-07/manifest/standard.git@rel-23:$TOP/standard/android-framework.xml#tlk/ \
+> --additional-manifest nv-git-07/manifest/standard.git@rel-23:$TOP/standard/nv-common.xml#tlk/ \
+> --additional-manifest nv-git-07/manifest/standard.git@rel-23:$TOP/standard/tlk/p1889.xml#tlk/ \
+> --set-notes "[MVS] build with manifests, Bug 200093356" \
+> --set-keywords "gerrit_git-master_730108,gerrit_git-master_730623"
+
+
+19. HV setup.
+A.get code for V3x.
+
+D.open uart muxer if usb0-4
+sudo /home/ncho/bin/uart_muxer -g 5 -b 4 -d /dev/ttyUSB1 &
+
+/dev/pts/23 -27
+23: android
+24: linux ---> startx & (start the linux window x)
+25: 
+26:
+27:
+
+package linux rootfs.
+linux/out/embedded-linux-vcm30t124-release/target_rootfs/early
+
+compare this folder and linux linux.
+foundation/hypervisor/hypervisor-meta/pct$ vim vcm30t124/android-linux-pl
+
+clean build the vm1 android.
+build_kernel.sh vcm30t124 android-vm1 clean-build
+
+tmux new-session -t test
+tmux new -s build_v3x
+tmux attach-session -t test
+base command ctrl+b
+
+c (add a bash window)
+$ (modify the session name)
+w (switch window)
+, (modify bash name)
+
+flash command
+foundation/hypervisor/hypervisor-meta/pct/vcm30t124/android-linux-pl$ vim global_storage.cfg
+flash -H -u GOS1  ---> android boot
+
+========================================
+
+18. Get build log from tmp
+tmp 2>&1 | tee make03.log
+
+17.adb logcat all level.
+adb logcat -c && adb logcat -v time *:*
+
+16. wifi password 
+OEMSQA P:sqa123456
+tegra20 P:5500550055
+accessUS P:nvidiaandroid
+
+15. 
+	arch/t124/core/kernel_cmdline.c
+
+    AutomationMode = QbQueryBoardInfo(QbAutomationMode);
+
+    /* disable uart log */
+    AutomationMode = QbAutomationMode_None;
+
+    if (AutomationMode == QbAutomationMode_None)
+        QbSnprintf(ptr, Remains, "debug_uartport=hsport ");
+    else
+        QbSnprintf(ptr, Remains, "debug_uartport=lsport,%d "
+
+14. repacking ramdisk image
+
+ cd $OUT
+ mkdir root
+ cd root
+ gunzip -c ../ramdisk.img | cpio -i
+ cp /home/ncho/bin/nv.264 early/
+ cd ..
+ mkbootfs root | gzip -9 > ramdisk.img
+ flash
+
+13. p1859 recovery mode.
+phidget-ctrl.sh lock
+phidget-ctrl.sh reset
+phidget-ctrl.sh recovery
+
+12. Fix adb not root issue.
+adb kill-server && sudo /home/ncho/1T/main/out/host/linux-x86/bin/adb devices
+
+11. ffmpeg to encode mp4 to h264 raw file.
+ffmpeg -i pedestrian_area_1080p_SP_24fps_12M.mp4 -s 800x600 -t 2 -f h264 -y output.h264
+
+10. sed example 
+sed -i 's/videodemo/earlyvideo/g' *  
+## this is sed all file in this folder for change name from videodemo to earlyvideo
+
+9. test early camera
+p1859:
+adb shell early/bin/nvmedia_earlycamera -cf /early/early_camera.conf -c1 dvp-ov10635-yuv422-ab -c2 default -ot rgba -or 1920x1080 --aggregate 1 -d 0 -w 1 -v 2
+linux:
+/home/nvidia/nvmedia_capture2d -cf /early/early_camera.conf -c1 dvp-ov10635-yuv422-ab -c2 default -ot rgba -or 1920x1080 --aggregate 1 -d 0 -w 1 -v 2
+p1889:
+adb shell early/bin/nvmedia_earlycamera -cf /early/early_camera.conf -c1 dvp-ov10635-yuv422-cd -c2 default -ot rgba -or 1920x1080 --aggregate 1 -d 0 -w 1 -v 2
+adb shell /early/bin/nvmedia_earlyvideo -d 0 -c 4 -f /early/nv.264
+p1889: adb shell /system/vendor/bin/nvmedia_imagecapture -cf /sdcard/p1889.conf -c dvp-ov10635-yuv422-1280x800-cd -z 1 -d 0 -w 1 -v 3
+p1889: adb shell early/bin/nvmedia_earlycamera -cf /early/early_camera_OV10635.conf -c dvp-ov10635-yuv422-1280x800-cd -d 0 -w 1 -z 1
+p1889: adb shell /system/vendor/bin/nvmedia_capture2d -cf /early/early_camera_OV10635.conf -c1 dvp-ov10635-yuv422-1280x800-cd -ot rgba -or 1920x1080 --aggregate 1 -d 0 -w 1 -z 1  -p 1280:800:1280:800
+
+8. enable show fps(refresh-rate) in logcat
+adb shell "service call SurfaceFlinger 1006 i32 1"
+adb shell setprop debug.graphic_log 1
+
+7. build command
+p1859 : export TOP=$(pwd) && . build/envsetup.sh && setpaths && choosecombo 1 p1859ref 3
+p1889 : export TOP=$(pwd) && . build/envsetup.sh && setpaths && choosecombo 1 p1889ref 3
+p1889 : export TOP=$(pwd) &&. build/envsetup.sh && setpaths && unset ANDROID_HOME NDKROOT NDK_ROOT NDK_STANDALONE_46_ANDROID9_32 NDK_STANDALONE_46_ANDROID9_64 CUDA_TOOLKIT_ROOT CUDA_TOOLKIT_ROOT_7_0 GRADLE_HOME ANT_HOME && choosecombo 1 p1889ref 3
+
+6. mtd write set early camera .
+video : $adb shell 'echo early=vid > /dev/block/mtdblock6'
+camera : adb shell 'echo early=cam > /dev/block/mtdblock6'
+gpio : adb shell 'echo early=gpi > /dev/block/mtdblock6'
+
+5. disable HWC setting.
+$adb shell service call SurfaceFlinger 1008 i32 1
+
+--- a/services/surfaceflinger/SurfaceFlinger.cpp
++++ b/services/surfaceflinger/SurfaceFlinger.cpp
+@@ -138,7 +138,7 @@ SurfaceFlinger::SurfaceFlinger()
+         mAnimCompositionPending(false),
+         mDebugRegion(0),
+         mDebugDDMS(0),
+-        mDebugDisableHWC(0),
++        mDebugDisableHWC(1),
+
+4. change USB from host(OTG) to client(ADB).
+ echo 0 > /sys/devices/platform/tegra-otg/enable_host
+ echo 1 > /sys/devices/platform/tegra-otg/enable_device
+
+3.debug userspace daemon and print message to kernel message.
+http://git-master/r/#/c/590372/
+
+patch folder 0001-DNI-ARM-p1859-debug-information-purpose.patch
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+static int _fd = 0;
+#define UT_TRACE(fmt, ...) do { \
+    char _buf[256];\
+    if (_fd == 0) { \
+        _fd = open("/proc/micro_timer", O_RDWR); \
+    } \
+    snprintf(_buf, 256, fmt, ##__VA_ARGS__);\
+    _buf[255] = '\0'; \
+    write(_fd, _buf, sizeof(_buf));\
+}while(0)
+
+2. only flash boot.img.
+mkbootfs root | gzip -9 > ramdisk.img && BOARD=p1889 flash -- -u KERNEL_PRIMARY
+
+1. capture2d study.
+
+capture2d -z 
+---Can set the window depth. 0-255.
+===code flow===
+common/image_display.c:75:    NvMediaIDPSetDepth(display->display, param->depth);
+tvmr/nvmedia/image/image_display.c:259:   NvMediaIDPSetDepth( TVMRFlipQueueSetAttributes( idpPriv->flipQueue, flipQueuAttributeMask, &flipQueuAttributes);
+tvmr/tvmr/output_dc.c:982:  TVMRFlipQueueSetAttributes(
+   if(attribute_mask & TVMR_FLIP_QUEUE_ATTRIBUTE_DEPTH) {
+      NvU8 depth = CLAMP(attr->depth, 0, 255);
+
+      flipQueuePriv->z = depth;
+   }
+
+****ref ***
+tvmr/tvmr/output_dc.c:1084:   if(attribute_mask & TVMR_FLIP_QUEUE_ATTRIBUTE_DEPTH) {
+tvmr/nvmedia/video/overlay.c:915:    flipQueuAttributeMask |= TVMR_FLIP_QUEUE_ATTRIBUTE_DEPTH;
+tvmr/nvmedia/image/image_display.c:265:    NvU32 flipQueuAttributeMask = TVMR_FLIP_QUEUE_ATTRIBUTE_DEPTH;
+tvmr/include/tvmr.h:60:#define TVMR_FLIP_QUEUE_ATTRIBUTE_DEPTH            (1<<6)
+tvmr/include/tvmr.h:4694://               attribute mask is TVMR_FLIP_QUEUE_ATTRIBUTE_DEPTH.
+***********
+tvmr/tvmr/output_dc.c:570:   flipQueuePriv->z = z;
+tvmr/tvmr/output_dc.c:762:   winArgs.z = flipQueuePriv->z;
+tvmr/tvmr/output_dc.c:950:   winArgs.z = flipQueuePriv->z;
+tvmr/tvmr/output_dc.c:1087:      flipQueuePriv->z = depth;
+
+
+0.
+Nor IP:
+10.19.106.171
+FFBE IP:
+10.19.106.230

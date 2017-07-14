@@ -1,0 +1,55 @@
+
+#---- first boot
+ifconfig eth0 up
+dhclient eth0
+sudo apt-get update
+sudo apt-get install bridge-utils
+#reset sunstreaker.
+#Above steps just do once
+
+#---- setup ethernet
+##<<linux>>
+sudo ifconfig eth0 up
+sudo ifconfig hv0 up
+sudo ifconfig hv2 up
+sudo brctl addbr br0
+sudo brctl addif br0 eth0
+sudo brctl addif br0 hv0
+sudo brctl addif br0 hv2
+sudo dhclient br0
+
+##<<QNX>>
+dhcp.client hv0
+
+##<<Android>>
+ifconfig hv1 down
+ifconfig hv1 up
+
+#---- setup android on display.
+##////For local build
+##<<QNX>>
+fs-nfs3 -t 10.19.106.164:/home/ncho/1T/NextEV/qnx/out/embedded-qnx-t186ref-release-none/target_rootfs /
+. ./setup.sh
+screen
+ifconfig hv1 192.168.0.1 netmask 255.255.255.0 up
+/samples/opengles2/eglcrosspart/eglcrosspart -proctype consumer -latency 0 -timeout 0 -fifo 3 -dispno 1 -res 1920 1080 &
+#/////For GVS
+##<<QNX>>
+fs-nfs3 -vv -t 10.19.106.164:/home/ncho/1T/image/m-os/bb/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le /qnx7-aarch64le
+fs-nfs3 -t -b 1000 -B 32768 10.19.106.164:/home/ncho/1T/image/m-os/bb/vibrante-t186ref-qnx /root
+fs-nfs3 -t 10.19.106.164:/home/ncho/1T/image/m-os/bb /host
+export PATH=/proc/boot:/host/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le/usr/lib/:/host/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le/usr/bin/:/host/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le/usr/sbin/:/host/H
+export LD_LIBRARY_PATH=/proc/boot:/host/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le/lib:/host/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le/usr/lib:/host/qnx_toolchains/qnx_toolchain/target/qnx7/aarch64le/sbin:/root//
+export GRAPHICS_ROOT=/root/utils/scripts/screen/
+screen
+ifconfig hv1 192.168.0.1 netmask 255.255.255.0 up
+/root/samples/opengles2/eglcrosspart/screen/eglcrosspart -proctype consumer -port 8888 -latency 0 -timeout 0 -fifo 3 -dispno 1 -res 1920 1080 &
+
+#---- test_tool
+fs-nfs3 -t 10.19.106.164:/home/ncho/1T/image/m-os/bb/vibrante-t186ref-qnx/nxp/embedded-qnx-t186ref-release-none/nvidia/qnx/src/tests/audio/dirana_ctrl-qnx_64 /test_tool
+
+#---- adb connect
+adb connect <<Android ip>>
+
+#---- adb mouse
+setup_adbmouse.sh

@@ -1,0 +1,237 @@
+[nvidia]
+	username = ncho
+[user]
+	name = Nor Cho
+	email = ncho@nvidia.com
+[color]
+	ui = auto
+[url "git://git-mirror:9418/android/tools/repo.git"]
+	insteadOf = git://android.git.kernel.org/tools/repo.git
+	insteadOf = https://code.google.com/p/git-repo/
+	insteadOf = https://code.google.com/p/git-repo
+	insteadOf = https://android.googlesource.com/tools/repo
+	insteadOf = https://gerrit.googlesource.com/git-repo
+[url "git://git-mirror:9418/"]
+	insteadOf = git://git-master:29418/
+	insteadOf = git://git-master:12001/
+	insteadOf = git://git-master:9418/
+	insteadOf = git://git-master/
+	insteadOf = git://git-master.nvidia.com:29418/
+	insteadOf = git://git-master.nvidia.com:12001/
+	insteadOf = git://git-master.nvidia.com:9418/
+	insteadOf = git://git-master.nvidia.com/
+	insteadOf = ssh://git-master:29418/
+	insteadOf = ssh://git-master:12001/
+	insteadOf = ssh://git-master/
+	insteadOf = ssh://git-master.nvidia.com:29418/
+	insteadOf = ssh://git-master.nvidia.com:12001/
+	insteadOf = ssh://git-master.nvidia.com/
+	insteadOf = ssh://ncho@git-master:29418/
+	insteadOf = ssh://ncho@git-master:12001/
+	insteadOf = ssh://ncho@git-master/
+	insteadOf = ssh://ncho@git-master.nvidia.com:29418/
+	insteadOf = ssh://ncho@git-master.nvidia.com:12001/
+	insteadOf = ssh://ncho@git-master.nvidia.com/
+	insteadOf = git://git-p4swmirror/
+	insteadOf = git://git-p4swmirror:14006/
+	insteadOf = git://git-p4swmirror.nvidia.com/
+	insteadOf = git://git-p4swmirror.nvidia.com:14006/
+	insteadOf = ssh://git-p4swmirror/
+	insteadOf = ssh://git-p4swmirror:14006/
+	insteadOf = ssh://git-p4swmirror.nvidia.com/
+	insteadOf = ssh://git-p4swmirror.nvidia.com:14006/
+	insteadOf = ssh://ncho@git-p4swmirror/
+	insteadOf = ssh://ncho@git-p4swmirror:14006/
+	insteadOf = ssh://ncho@git-p4swmirror.nvidia.com/
+	insteadOf = ssh://ncho@git-p4swmirror.nvidia.com:14006/
+	insteadOf = ssh://git-mobile-vm05/
+	insteadOf = ssh://git-mobile-vm05.nvidia.com/
+	insteadOf = ssh://git-mobile-vm05:29418/
+	insteadOf = ssh://git-mobile-vm05.nvidia.com:29418/
+	insteadOf = ssh://ncho@git-mobile-vm05/
+	insteadOf = ssh://ncho@git-mobile-vm05.nvidia.com/
+	insteadOf = ssh://ncho@git-mobile-vm05:29418/
+	insteadOf = ssh://ncho@git-mobile-vm05.nvidia.com:29418/
+	insteadOf = git://git-mirror/mirror/git-mobile-vm05/
+	insteadOf = git://git-mirror.nvidia.com/mirror/git-mobile-vm05/
+	insteadOf = git://git-mirror:9418/mirror/git-mobile-vm05/
+	insteadOf = git://git-mirror.nvidia.com:9418/mirror/git-mobile-vm05/
+	insteadOf = ssh://git-asus/
+	insteadOf = ssh://git-asus:11001/
+	insteadOf = ssh://git-asus.nvidia.com/
+	insteadOf = ssh://git-asus.nvidia.com:11001/
+	insteadOf = ssh://ncho@git-asus/
+	insteadOf = ssh://ncho@git-asus:11001/
+	insteadOf = ssh://ncho@git-asus.nvidia.com/
+	insteadOf = ssh://ncho@git-asus.nvidia.com:11001/
+	insteadOf = ssh://git-shark/
+	insteadOf = ssh://git-shark.nvidia.com/
+	insteadOf = ssh://git-shark:11003/
+	insteadOf = ssh://git-shark.nvidia.com:11003/
+	insteadOf = ssh://ncho@git-shark/
+	insteadOf = ssh://ncho@git-shark.nvidia.com/
+	insteadOf = ssh://ncho@git-shark:11003/
+	insteadOf = ssh://ncho@git-shark.nvidia.com:11003/
+	insteadOf = ssh://git-lge/
+	insteadOf = ssh://git-lge.nvidia.com/
+	insteadOf = ssh://git-lge:11004/
+	insteadOf = ssh://git-lge.nvidia.com:11004/
+	insteadOf = ssh://ncho@git-lge/
+	insteadOf = ssh://ncho@git-lge.nvidia.com/
+	insteadOf = ssh://ncho@git-lge:11004/
+	insteadOf = ssh://ncho@git-lge.nvidia.com:11004/
+	insteadOf = http://git-gtv/
+	insteadOf = http://git-gtv.nvidia.com/
+	insteadOf = http://ncho@git-gtv/
+	insteadOf = http://ncho@git-gtv.nvidia.com/
+	insteadOf = ssh://git-gtv:11007/
+	insteadOf = ssh://git-gtv.nvidia.com:11007/
+	insteadOf = ssh://ncho@git-gtv:11007/
+	insteadOf = ssh://ncho@git-gtv.nvidia.com:11007/
+	insteadOf = http://git-bn/
+	insteadOf = http://git-bn.nvidia.com/
+	insteadOf = http://ncho@git-bn/
+	insteadOf = http://ncho@git-bn.nvidia.com/
+	insteadOf = ssh://git-bn:11009/
+	insteadOf = ssh://git-bn.nvidia.com:11009/
+	insteadOf = ssh://ncho@git-bn:11009/
+	insteadOf = ssh://ncho@git-bn.nvidia.com:11009/
+[url "ssh://ncho@git-master:12001/"]
+	pushInsteadOf = git://git-master:29418/
+	pushInsteadOf = git://git-master:12001/
+	pushInsteadOf = git://git-master:9418/
+	pushInsteadOf = git://git-master/
+	pushInsteadOf = git://git-master.nvidia.com:29418/
+	pushInsteadOf = git://git-master.nvidia.com:12001/
+	pushInsteadOf = git://git-master.nvidia.com:9418/
+	pushInsteadOf = git://git-master.nvidia.com/
+	pushInsteadOf = ssh://git-master:29418/
+	pushInsteadOf = ssh://git-master:12001/
+	pushInsteadOf = ssh://git-master/
+	pushInsteadOf = ssh://git-master.nvidia.com:29418/
+	pushInsteadOf = ssh://git-master.nvidia.com:12001/
+	pushInsteadOf = ssh://git-master.nvidia.com/
+	pushInsteadOf = ssh://ncho@git-master:29418/
+	pushInsteadOf = ssh://ncho@git-master:12001/
+	pushInsteadOf = ssh://ncho@git-master/
+	pushInsteadOf = ssh://ncho@git-master.nvidia.com:29418/
+	pushInsteadOf = ssh://ncho@git-master.nvidia.com:12001/
+	pushInsteadOf = ssh://ncho@git-master.nvidia.com/
+[url "ssh://git-master:12001/tegra/top-secret.git"]
+	insteadOf = ssh://git-master.nvidia.com:29418/tegra/top-secret.git
+	insteadOf = ssh://git-master.nvidia.com:12001/tegra/top-secret.git
+	insteadOf = ssh://git-master:29418/tegra/top-secret.git
+	insteadOf = ssh://git-master:12001/tegra/top-secret.git
+	insteadOf = ssh://git-master.nvidia.com/tegra/top-secret.git
+	insteadOf = ssh://git-master/tegra/top-secret.git
+	insteadOf = ssh://ncho@git-master.nvidia.com:29418/tegra/top-secret.git
+	insteadOf = ssh://ncho@git-master:29418/tegra/top-secret.git
+	insteadOf = ssh://ncho@git-master.nvidia.com:12001/tegra/top-secret.git
+	insteadOf = ssh://ncho@git-master.nvidia.com/tegra/top-secret.git
+	insteadOf = ssh://ncho@git-master/tegra/top-secret.git
+[url "git://git-mirror:9418/mirror/nv-git-07/"]
+	insteadOf = git://nv-git-07:29418/
+	insteadOf = git://nv-git-07/
+	insteadOf = git://nv-git-07.nvidia.com:29418/
+	insteadOf = git://nv-git-07.nvidia.com/
+	insteadOf = ssh://nv-git-07:29418/
+	insteadOf = ssh://nv-git-07/
+	insteadOf = ssh://nv-git-07.nvidia.com:29418/
+	insteadOf = ssh://nv-git-07.nvidia.com/
+	insteadOf = ssh://ncho@nv-git-07:29418/
+	insteadOf = ssh://ncho@nv-git-07/
+	insteadOf = ssh://ncho@nv-git-07.nvidia.com:29418/
+	insteadOf = ssh://ncho@nv-git-07.nvidia.com/
+[url "ssh://ncho@nv-git-07.nvidia.com:29418/"]
+	pushInsteadOf = ssh://nv-git-07.nvidia.com:29418/
+	pushInsteadOf = ssh://nv-git-07:29418/
+	pushInsteadOf = ssh://ncho@nv-git-07:29418/
+	pushInsteadOf = ssh://ncho@nv-git-07.nvidia.com:29418/
+[url "git://git-mirror:9418/m/asus/tf201/"]
+	insteadOf = ssh://git.asus.com/
+	insteadOf = ssh://git.asus.com:17865/
+	insteadOf = ssh://ncho@git.asus.com/
+	insteadOf = ssh://ncho@git.asus.com:17865/
+[url "git://git-mirror:9418/m/lge/ap40i_jb_mr1/"]
+	insteadOf = ssh://165.243.115.111:29440/
+	insteadOf = ssh://ncho@165.243.115.111:29440/
+[url "ssh://ncho@git-lge:11004/m/lge/ap40i_jb_mr1/"]
+	pushInsteadOf = http://165.243.115.111:8100/ap40i_jb_mr1/
+	pushInsteadOf = ssh://165.243.115.111:29440/
+	pushInsteadOf = ssh://ncho@165.243.115.111:29440/
+[url "git://git-mirror:9418/m/korg/pub/scm/linux/kernel/git/next/linux-next"]
+	insteadOf = git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+[url "git://git-mirror:9418/m/korg/pub/scm/linux/kernel/git/torvalds/linux-2.6"]
+	insteadOf = git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6
+[url "git://git-mirror/m/google/tv/"]
+	insteadOf = http://googletv-partner.googlesource.com/
+	insteadOf = https://googletv-partner.googlesource.com/
+	insteadOf = http://partner.source.googletv.com/
+	insteadOf = https://partner.source.googletv.com/
+	insteadOf = ssh://partner.source.googletv.com:29418/
+	insteadOf = ssh://partner.source.googletv.com/
+	insteadOf = ssh://ncho@partner.source.googletv.com:29418/
+	insteadOf = ssh://ncho@partner.source.googletv.com/
+[url "ssh://ncho@git-gtv:11007/m/google/tv/"]
+	pushInsteadOf = http://googletv-partner.googlesource.com/
+	pushInsteadOf = https://googletv-partner.googlesource.com/
+	pushInsteadOf = http://partner.source.googletv.com/
+	pushInsteadOf = https://partner.source.googletv.com/
+	pushInsteadOf = ssh://partner.source.googletv.com:29418/
+	pushInsteadOf = ssh://partner.source.googletv.com/
+	pushInsteadOf = ssh://ncho@partner.source.googletv.com:29418/
+	pushInsteadOf = ssh://ncho@partner.source.googletv.com/
+[url "http://ncho@git-gtv/"]
+	pushInsteadOf = http://git-gtv/
+	pushInsteadOf = http://git-gtv.nvidia.com/
+	pushInsteadOf = http://ncho@git-gtv/
+	pushInsteadOf = http://ncho@git-gtv.nvidia.com/
+[url "ssh://ncho@git-gtv:11007/"]
+	pushInsteadOf = ssh://git-gtv:11007/
+	pushInsteadOf = ssh://git-gtv.nvidia.com:11007/
+	pushInsteadOf = ssh://ncho@git-gtv:11007/
+	pushInsteadOf = ssh://ncho@git-gtv.nvidia.com:11007/
+[url "ssh://ncho@git-bn:11009/m/bn/nook/"]
+	insteadOf = http://pa-git03.barnesandnoble.com:8080/
+	insteadOf = https://pa-git03.barnesandnoble.com:8080/
+	insteadOf = ssh://pa-git03.barnesandnoble.com:29418/
+	insteadOf = ssh://ncho@pa-git03.barnesandnoble.com:29418/
+	insteadOf = http://platextgit03.barnesandnoble.com:8080/
+	insteadOf = https://platextgit03.barnesandnoble.com:8080/
+	insteadOf = ssh://platextgit03.barnesandnoble.com:29418/
+	insteadOf = ssh://ncho@platextgit03.barnesandnoble.com:29418/
+[url "http://ncho@git-bn/"]
+	pushInsteadOf = http://git-bn/
+	pushInsteadOf = http://git-bn.nvidia.com/
+	pushInsteadOf = http://ncho@git-bn/
+	pushInsteadOf = http://ncho@git-bn.nvidia.com/
+[url "ssh://ncho@git-bn:11009/"]
+	pushInsteadOf = ssh://git-bn:11009/
+	pushInsteadOf = ssh://git-bn.nvidia.com:11009/
+	pushInsteadOf = ssh://ncho@git-bn:11009/
+	pushInsteadOf = ssh://ncho@git-bn.nvidia.com:11009/
+[url "ssh://ncho@git-p4swmirror:14006/"]
+	pushInsteadOf = git://git-p4swmirror:14006/
+	pushInsteadOf = git://git-p4swmirror/
+	pushInsteadOf = git://git-p4swmirror.nvidia.com:14006/
+	pushInsteadOf = git://git-p4swmirror.nvidia.com/
+	pushInsteadOf = ssh://git-p4swmirror:14006/
+	pushInsteadOf = ssh://git-p4swmirror/
+	pushInsteadOf = ssh://git-p4swmirror.nvidia.com:14006/
+	pushInsteadOf = ssh://git-p4swmirror.nvidia.com/
+	pushInsteadOf = ssh://ncho@git-p4swmirror:14006/
+	pushInsteadOf = ssh://ncho@git-p4swmirror/
+	pushInsteadOf = ssh://ncho@git-p4swmirror.nvidia.com:14006/
+	pushInsteadOf = ssh://ncho@git-p4swmirror.nvidia.com/
+[url "git://git-mirror/m/denx.de/"]
+	insteadOf = git://git.denx.de/
+[url "ssh://ncho@git-lge.nvidia.com:11004/"]
+	pushInsteadOf = ssh://git-lge/
+	pushInsteadOf = ssh://git-lge.nvidia.com/
+	pushInsteadOf = ssh://git-lge:11004/
+	pushInsteadOf = ssh://git-lge.nvidia.com:11004/
+	pushInsteadOf = ssh://ncho@git-lge/
+	pushInsteadOf = ssh://ncho@git-lge.nvidia.com/
+	pushInsteadOf = ssh://ncho@git-lge:11004/
+	pushInsteadOf = ssh://ncho@git-lge.nvidia.com:11004/
+

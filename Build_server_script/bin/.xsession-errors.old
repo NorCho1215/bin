@@ -1,0 +1,10 @@
+Script for ibus started at run_im.
+Script for auto started at run_im.
+Script for default started at run_im.
+init: indicator-bluetooth main process (2182) killed by TERM signal
+init: indicator-power main process (2184) killed by TERM signal
+init: indicator-datetime main process (2187) killed by TERM signal
+init: indicator-printers main process (2197) killed by TERM signal
+init: indicator-session main process (2215) killed by TERM signal
+init: indicator-application main process (2231) killed by TERM signal
+init: Disconnected from notified D-Bus bus

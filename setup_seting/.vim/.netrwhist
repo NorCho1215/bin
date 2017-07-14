@@ -1,0 +1,11 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =9
+let g:netrw_dirhist_1='/home/ncho/1T/Nissan-poc-v3a/device/nvidia/platform/p1889'
+let g:netrw_dirhist_2='/home/ncho/1T/Nissan-poc-v3a/device/nvidia'
+let g:netrw_dirhist_3='/home/ncho/1T/Nissan-poc-v3a/vendor/nvidia/tegra/embedded/android-partner/tuner/pcoretuner/l2'
+let g:netrw_dirhist_4='/home/ncho/1T/Nissan-poc-v3a/vendor/nvidia/tegra/embedded/android-partner/tuner/pcoretuner/l2/src'
+let g:netrw_dirhist_5='/home/ncho/1T/PG_git_project/tunerapp'
+let g:netrw_dirhist_6='/home/ncho/1T/embedded_24.05/android/device/nvidia/platform/vcm31t210'
+let g:netrw_dirhist_7='/home/ncho/1T/embedded_24.05/android/vendor/nvidia/tegra/embedded/android-partner/tuner/tunerservice/src'
+let g:netrw_dirhist_8='/home/ncho/1T/embedded_24.05/android/vendor/nvidia/tegra/embedded/android-partner/tuner/pcoretuner/test/host_tests'
+let g:netrw_dirhist_9='/home/ncho/1T'

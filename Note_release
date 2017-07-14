@@ -1,0 +1,41 @@
+1. $repo init -u ssh://git-master:12001/tegra/manifest.git --manifest-branch=embedded/23.03.03 --manifest-name=android.xml
+$repo sync -cj4
+Add those changes.
+* device/nvidia/ 
+http://git-master/r/663247 
+
+* tegra/core 
+http://git-master/r/663249 
+
+* tegra/release 
+http://git-master/r/663252 
+
+* tegra/multimedia/utils 
+http://git-master/r/663253 
+
+* tegra/multimedia-partner/utils 
+http://git-master/r/663258 
+
+$export TOP=`pwd` &&. build/envsetup.sh && setpaths && export SECURE_OS_BUILD=tlk && choosecombo release p1859ref eng && mp
+$cd vendor/nvidia/release 
+$./create_release_package.py android-p1859 
+$cd out 
+$tar -czvf customer-release-packages_1217.tgz package-android-p1859-standard-23.0r0-tlk.tgz 
+====for create package.====
+2. $repo init -u ssh://git-master:12001/tegra/manifest.git -b embedded/23.03.03 -m build-automation.xml
+====for tools====
+3. $repo init -u ssh://git-master:12001/nv-git-07/manifest/standard -b embedded/23.03.03 -m tlk/p1859.xml
+$repo sync -cj4
+$export TOP=`pwd` &&. build/envsetup.sh && setpaths && export SECURE_OS_BUILD=tlk && choosecombo release p1859ref eng
+$~/1T/tools/build-scripts/utils/copy_android_prebuilts.py --android_bb_package=~/Projects/upload/tempfile/customer-release-packages_1217.tgz --top=$TOP --extract_dir=~/mydroid/temp
+* device/nvidia/ 
+http://git-master/r/663247 
+
+* tegra/core 
+http://git-master/r/663249 
+
+* tegra/multimedia-partner/utils 
+http://git-master/r/663258 
+
+$mp
+====for customer branch====

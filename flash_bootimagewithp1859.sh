@@ -1,0 +1,1 @@
+BOARD=p1859 flash -- -u KERNEL_PRIMARY

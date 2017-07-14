@@ -1,0 +1,3 @@
+#p4 sync -p tcp:p4syseng:2007 //syseng/Projects/DriveCX/P2382-Windcharger_Main_Board/Datasheet/SXM/... //ncho_android_minimal/syseng/Projects/DriveCX/P2382-Windcharger_Main_Board/Datasheet/SXM/...
+
+

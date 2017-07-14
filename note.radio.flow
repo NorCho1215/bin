@@ -1,0 +1,98 @@
+=====framework=======
+
+frameworks/av/services/radio/RadioService.cpp
+RadioService::onFirstRef()
+	hw_get_module_by_class(RADIO_HARDWARE_MODULE_ID, RADIO_HARDWARE_MODULE_ID_FM, &mod);  ---> radio.fm.xxx.so
+        radio_hw_device_open(mod, &dev);      
+****** libhardware/include/hardware/radio.h 
+static inline int radio_hw_device_open(const struct hw_module_t* module,
+                                       struct radio_hw_device** device)
+{
+    return module->methods->open(module, RADIO_HARDWARE_DEVICE,
+                                 (struct hw_device_t**)device);
+}
+******
+	    struct radio_hal_properties halProperties;
+    rc = dev->get_properties(dev, &halProperties);
+	android_atomic_inc ?????????
+    convertProperties(&properties, &halProperties);
+    sp<Module> module = new Module(dev, properties);
+    mModules.add(properties.handle, module);
+
+frameworks/av/services/radio/RadioRegions.h
+radio_band_config_t sKnownRegionConfigs[]
+
+#define RADIO_BAND_LOWER_FM_ITU1    87500
+#define RADIO_BAND_UPPER_FM_ITU1    108000
+#define RADIO_BAND_SPACING_FM_ITU1  100
+
+#define RADIO_BAND_LOWER_FM_ITU2    87900
+#define RADIO_BAND_UPPER_FM_ITU2    107900
+#define RADIO_BAND_SPACING_FM_ITU2  200
+
+#define RADIO_BAND_LOWER_FM_JAPAN    76000
+#define RADIO_BAND_UPPER_FM_JAPAN    90000
+#define RADIO_BAND_SPACING_FM_JAPAN  100
+
+#define RADIO_BAND_LOWER_FM_OIRT    65800
+#define RADIO_BAND_UPPER_FM_OIRT    74000
+#define RADIO_BAND_SPACING_FM_OIRT  10
+
+#define RADIO_BAND_LOWER_LW         153
+#define RADIO_BAND_UPPER_LW         279
+#define RADIO_BAND_SPACING_LW       9
+
+#define RADIO_BAND_LOWER_MW_IUT1    531
+#define RADIO_BAND_UPPER_MW_ITU1    1611
+#define RADIO_BAND_SPACING_MW_ITU1  9
+
+#define RADIO_BAND_LOWER_MW_IUT2    540
+#define RADIO_BAND_UPPER_MW_ITU2    1610
+#define RADIO_BAND_SPACING_MW_ITU2  10
+
+#define RADIO_BAND_LOWER_SW         2300
+#define RADIO_BAND_UPPER_SW         26100
+#define RADIO_BAND_SPACING_SW       5
+
+
+====hardware====
+
+libhardware/include/hardware/radio.h
+#define RADIO_HARDWARE_MODULE_ID "radio"
+#define RADIO_HARDWARE_DEVICE "radio_hw_device"
+
+#define RADIO_HARDWARE_MODULE_ID_FM "fm" /* corresponds to RADIO_CLASS_AM_FM */
+#define RADIO_HARDWARE_MODULE_ID_SAT "sat" /* corresponds to RADIO_CLASS_SAT */ satellite radio
+#define RADIO_HARDWARE_MODULE_ID_DT "dt" /* corresponds to RADIO_CLASS_DT */ 
+
+struct radio_tuner {
+    int (*set_configuration)(const struct radio_tuner *tuner,
+                             const radio_hal_band_config_t *config);
+    int (*get_configuration)(const struct radio_tuner *tuner,
+                             radio_hal_band_config_t *config);
+    int (*scan)(const struct radio_tuner *tuner,
+                radio_direction_t direction, bool skip_sub_channel);
+    int (*step)(const struct radio_tuner *tuner,
+                radio_direction_t direction, bool skip_sub_channel);
+    int (*tune)(const struct radio_tuner *tuner,
+                unsigned int channel, unsigned int sub_channel);
+    int (*cancel)(const struct radio_tuner *tuner);
+    int (*get_program_information)(const struct radio_tuner *tuner,
+                                   radio_program_info_t *info);
+};
+
+─
+struct radio_hw_device {
+    struct hw_device_t common;
+    int (*get_properties)(const struct radio_hw_device *dev,
+                          radio_hal_properties_t *properties);
+    int (*open_tuner)(const struct radio_hw_device *dev,
+                    const radio_hal_band_config_t *config,
+                    bool audio,
+                    radio_callback_t callback,
+                    void *cookie,
+                    const struct radio_tuner **tuner);
+    int (*close_tuner)(const struct radio_hw_device *dev, const struct radio_tuner *tuner);
+};
+typedef struct  radio_hw_device  radio_hw_device_t;
+

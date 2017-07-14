@@ -1,0 +1,8 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhist_cnt =6
+let g:netrw_dirhist_1='/home/ncho/1T/main/vendor/nvidia/tegra/embedded/apps-partner/early-tools/earlyappd'
+let g:netrw_dirhist_2='/home/ncho/1T/main_p1889/vendor/nvidia/tegra/multimedia-partner/utils/early-tools/earlyappd'
+let g:netrw_dirhist_3='/home/ncho/1T/main/vendor/nvidia/tegra/release'
+let g:netrw_dirhist_4='/home/ncho/1T/rel-23/vendor/nvidia/tegra/embedded/apps-partner/android/early-tools'
+let g:netrw_dirhist_5='/home/ncho/1T/rel-23/vendor/nvidia/tegra/tests-multimedia/tvmr/utils/i2c'
+let g:netrw_dirhist_6='/home/ncho/1T/main_p1889/3rdparty/pelagicore/nvidia-grayson-drivers'
